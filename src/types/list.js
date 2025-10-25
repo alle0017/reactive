@@ -5,135 +5,109 @@
  *    value: T,
  * }} ListNode
  */
+/**
+ * @template T
+ * @typedef {{
+ *    head: ListNode<T>
+ *    tail: ListNode<T>
+ * }} List
+ */
+/**
+ * @template T
+ * @returns {List<T>}
+ */
+export function createList() {
+      return {
+            head: null,
+            tail: null
+      };
+}
+/**
+ * @template T
+ * @param {T} value 
+ * @returns {ListNode<T>}
+ */
+export function createNode(value) {
+      return {
+            next: undefined,
+            value,
+      };
+}
 
 /**
  * @template T
+ * @param {ListNode<T>} node 
+ * @param {List<T>} list 
  */
-export default class List {
-      /**
-       * @type {ListNode<T>}
-       */
-      #head;
+export function append(node, list) {
+      if (!list.head) {
+            list.head = node;
+            list.tail = node;
+      } else {
+            list.tail.next = node;
+            list.tail = node;
+      }
+      node.next = null;
+}
+/**
+ * @template T
+ * @param {ListNode<T>} node 
+ * @param {List<T>} list 
+ */
+export function remove(node, list) {
+      if (node == list.head) {
+            list.head = list.head.next;
 
-      /**
-       * @template T
-       * @param {T} value 
-       * @returns {ListNode<T>}
-       */
-      #node(value) {
-            return {
-                  next: null,
-                  value,
+            if (node == list.tail) {
+                  list.tail = list.head;
             }
-      }
-      get length() {
-            let len = 0;
-            let curr = this.#head;
-
-            while (curr.next) {
-                  curr = curr.next;
-                  len++;
-            }
-
-            return len;
+            return;
       }
 
+      let prev = list.head;
+      let curr = list.head;
 
-      /**
-       * @param {ListNode<T>} node 
-       */
-      append(node) {
-            node.next = this.#head;
-            this.#head = node;
-      }
+      while (curr) {
+            if (curr == node) {
+                  prev.next = curr.next;
 
-      /**
-       * @param {ListNode<T>} node 
-       */
-      remove(node) {
-            if (this.#head === node) {
-                  this.#head = node.next;
-                  return;
-            }
-
-            node.value = this.#head.value;
-            this.#head = this.#head.next;
-      }
-
-      /**
-       * @param {(value: T) => void} callback
-       */
-      forEach(callback) {
-            let head = this.#head;
-
-            while (head) {
-                  callback(head.value);
-                  head = head.next;
-            }
-      }
-      /**
-       * @param {T} value 
-       */
-      has(value) {
-            let head = this.#head;
-
-            while (head) {
-                  if (head.value === value) {
-                        return true;
+                  if (curr == list.tail) {
+                        list.tail = prev;
                   }
-                  head = head.next;
             }
-            return false;
+            prev = curr;
+            curr = curr.next;
       }
-      /**
-       * 
-       * @param {ListNode<T>} node 
-       */
-      holds(node) {
-            let head = this.#head;
+}
 
-            while (head) {
-                  if (head == node) {
-                        return true;
-                  }
-                  head = head.next;
-            }
-            return false;
+/**
+ * @template T
+ * @param {List<T>} list 
+ */
+export function _toString(list) {
+      let curr = list.head;
+      let str = `{${list.head}}`;
+
+      
+
+      while (curr) {
+            str += `(${curr.value}) -> `;
+            curr = curr.next;
       }
-      /**
-       * @param {T} value
-       */
-      push(value) {
-            const n = this.#node(value);
-
-            this.append(n);
-
-            return n;
-      }
-      /**
-       * @param {T} value 
-       */
-      delete(value) {
-            let head = this.#head;
-
-            while (head) {
-                  if (head.value === value) {
-                        this.remove(head);
-                        return true;
-                  }
-                  head = head.next;
-            }
-            return false;
-      }
-      clear() {
-            this.#head = null;
-      }
-      * [Symbol.iterator]() {
-            let head = this.#head;
-
-            while (head) {
-                  yield head.value;
-                  head = head.next;
-            }
+      str += `() {${list.tail}}`;
+      return str;
+}
+/**
+ * @template T
+ * @param {List<T>} list 
+ * @param {List<T>} next 
+ */
+export function join(list, next) {
+      if (!list.head) {
+            list.head = next.head;
+            list.tail = next.tail;
+      } else {
+            list.tail.next = next.head;
+            list.tail = next.tail ?? list.tail;
       }
 }

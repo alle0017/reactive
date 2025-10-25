@@ -1,73 +1,86 @@
-import List from "../types/list.js";
-/**@import {ListNode} from "../types/list.js";*/
+import { _toString, append, createList, createNode, join, remove } from "../types/list.js";
+/**@import { List, ListNode } from "../types/list.js";*/
+/**@typedef {{}} Ticket */
 
 /**
  * @template T
- * @typedef {(value: T) => void} Subscriber 
- */
-/**
- * @typedef {{}} Ticket
- */
-/**
- * @template T
- * @abstract
  */
 export default class Reactive {
+      static id = 0;
+      id = Reactive.id++;
+      #visited = false;
       /**
-       * @type {List<Subscriber<T>>}
+       * @type {List<Reactive<unknown>>}
        */
-      #subs = new List();
+      #deps = createList();
       /**
        * @type {T}
-       */
-      #value;
-      /**
-       * @type {T}
-       */
-      get value() {
-            return this.#value;
-      }
-      set value(val) {
-            throw new Error('[Reactive] value attribute setter must be implemented')
-      }
-      /**
-       * function used as middle representation
-       * it is used to trigger all subscriptions
-       * @param {Subscriber<T>} sub 
-       */
-      #trigger = sub => {
-            sub(this.value);
-      }
-      /**
-       * method used to apply modification to the actual
-       * value
        * @protected
-       * @param {T} value 
        */
-      apply(value) {
-            this.#value = value;
-            console.log(this.#value, value)
-            this.trigger();
+      $value;
+
+      get value() {
+            return this.$value;
+      }
+      set value(value) {
+            this.$value = value;
+            this.notify();
+      }
+
+      /**
+       * @protected
+       */
+      refresh() {
+
       }
       /**
-       * @param {Subscriber<T>} consumer 
+       * @protected
+       */
+      notify() {
+            /**@type {List<Reactive<unknown>>} */
+            const dependencies = createList();
+            join(dependencies, this.#deps);
+            let curr = dependencies.head;
+
+            while (curr) {
+                  const dep = curr.value;
+
+                  if (!dep.#visited) {
+                        dep.#visited = true;
+                        join(dependencies, dep.#deps);
+                  }
+                  
+                  dep.refresh();
+                  curr = curr.next;
+            }
+            curr = dependencies.head;
+
+            while (curr) {
+                  curr.value.#visited = false;
+
+                  if (curr.value.#deps.tail) {
+                        curr.value.#deps.tail.next = null;
+                  }
+                  
+                  curr = curr.next;
+            }
+      }
+
+      /**
+       * 
+       * @param {Reactive<unknown>} reactive 
        * @returns {Ticket}
        */
-      subscribe(consumer) {
-            return this.#subs.push(consumer);
+      subscribe(reactive) {
+            const node = createNode(reactive);
+            append(node, this.#deps);
+            return node;
       }
       /**
        * 
-       * @param {Ticket} ticket 
+       * @param {Ticket} ticket
        */
       unsubscribe(ticket) {
-            const node = /**@type {ListNode<Subscriber<T>>} */(ticket);
-
-            if (this.#subs.holds(node)) {
-                  this.#subs.remove(node);
-            }
-      }     
-      trigger() {
-            this.#subs.forEach(this.#trigger);
+            remove(/**@type {ListNode<Reactive<unknown>>}*/(ticket), this.#deps);
       }
 }

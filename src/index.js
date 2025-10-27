@@ -17,11 +17,11 @@ export const signal = value => {
  * @param {...Reactive<unknown>} deps
  * @returns {Reactive<T>}
  */
-export const effect = (callback, ...deps) => new Effect(callback, ...deps)
+export const effect = (callback, ...deps) => new Effect(callback, false, ...deps)
 /**
  * @template T
  * @param {() => T} callback
  * @param {...Reactive<unknown>} deps
  * @returns {Reactive<T>}
  */
-export const computed = (callback, ...deps) => new Effect(callback, ...deps)
+export const computed = (callback, ...deps) => new Effect(callback, true, ...deps)

@@ -20,9 +20,10 @@ export default class Effect extends Reactive {
        */
       #mapper;
       #dirty = true;
+      #lazy;
 
       get value() {
-            if (this.#dirty) {
+            if (this.#dirty && this.#lazy) {
                   this.$value = this.#mapper();
                   this.#dirty = false;
             }
@@ -34,11 +35,13 @@ export default class Effect extends Reactive {
       /**
        * 
        * @param {() => T} mapper 
+       * @param {boolean} lazy
        * @param  {...Reactive<unknown>} deps 
        */
-      constructor(mapper, ...deps) {
+      constructor(mapper, lazy, ...deps) {
             super();
             this.#mapper = mapper;
+            this.#lazy = lazy;
             for (let i = 0; i < deps.length; i++) {
                   append(
                         createNode({
@@ -52,6 +55,10 @@ export default class Effect extends Reactive {
 
       refresh() {
             this.#dirty = true;
+
+            if (!this.#lazy) {
+                  this.$value = this.#mapper();
+            }
       }
 
       drop() {
